@@ -1,0 +1,203 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Email Generator by M. Concepcion</title>
+<style>
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+  }
+
+  section {
+    display: block;
+    padding-bottom: 10px;
+  }
+  .body-container {
+    display: flex;
+    flex-direction: row;
+    width: 1024px;
+    background-color: #f0f0f0;
+    margin: 20px auto;
+    vertical-align: top;
+  }
+  
+  .split-container {
+    border: 1px solid #26C;
+    width: 50%;
+    padding: 1vw;
+    display: inline-block;
+  }
+  
+  .simple-text {
+    display: inline-block;
+    font-family:Arial,Helvetica,sans-serif;
+    font-size: 40px;
+    font-weight: bold;
+  }
+</style>
+</head>
+
+<body>
+  <h2 class="editor-title">Universal Email Generator</h2>
+  <div class="body-container">
+    <!-- Left side of editor -->
+    <div class="split-container">
+      <form>
+        <!-- Dropdown for selecting what email template to use -->
+        <section id="sectTemplateSelect">
+          <label for="dropdownTemplateSelect">Template:</label>
+          <select id="dropdownTemplateSelect" onchange="changeTemplate()">
+            <option value="templateSFA" selected="selected">SFA</option>
+            <option value="templateSO5">SO5</option>
+          </select>
+        </section>
+        <section id="sectAddFileName">
+          <label for="txtinputFileName">File Name:</label>&nbsp;
+          <input id="txtinputFileName" type="text" size="50">
+        </section>
+        <section id="sectNumberOfImgsLinks">
+          <label for="txtinputLinkCount">Link Count:</label>&nbsp;
+          <input id="txtinputLinkCount" type="number" defaultValue="1" style="width:40px;">&nbsp;&nbsp;&nbsp;&nbsp;
+          <label for="txtinputImgCount">Image Count:</label>&nbsp;
+          <input id="txtinputImgCount" type="number" defaultValue="1" style="width:40px;">
+        </section>
+        <!-- Button for adding a new table row to the code -->
+        <section id="sectAddHTMLRow">
+          <button id="btnAddHTMLRow" type="button">Add Table Row</button>
+          <button id="btnAddRowSep" type="button">Add Row Separator</button>
+        </section>
+        <!-- Area where the link input fields are added -->
+        <section id="sectLinkRows">
+          <div id="divLinkRows">
+          </div>
+        </section>
+        <!-- Area where new table rows are added -->
+        <section id="sectHTMLRows">
+          <div id="divHTMLRows">
+          </div>
+        </section>
+        <!-- Button for generating code -->
+        <section id="sectGenerateCode">
+          <button id="btnGenerateCode" type="button">Generate Code</button>
+        </section>
+      </form>
+    </div>
+    <div class="split-container">
+      <section id="sectResultTextArea">
+        <label for="textareaResult">Result HTML:</label>
+        <textarea id="textareaResult" cols="80" rows="40"></textarea>
+      </section>
+      <section id="sectCopyCodeToClipboard">
+        <button id="btnCopyCodeToClipboard" type="button">Copy Code to Clipboard</button>
+      </section>
+    </div>
+  </div>
+  <script>
+    /* **************************************************
+     * HTML Format variables 
+     */
+    var tableCellRowOpenTags  = "        <tr>\n"
+                              + "          <td align=\"center\">\n";
+    var tableCellRowCloseTags = "          </td>\n"
+                              + "        </tr>\n";
+    var tableCellRowSeparator = "        <tr><td height=\"6\" bgcolor=\"#F5F5F5\"></td></tr>\n";
+    var imgURLStart = "https://image.s5a.com/is/image/saks/";
+    var imgURLFmtSettings = "?scl=1&qlt=100&fmt=png";
+    var imgURLUserFilename = "";
+    var imgURLFullURL = "";
+    
+    
+    var modeShift = "Saks Fifth Avenue";
+    
+    function changeTemplate() {
+      if ( document.getElementById( "dropdownTemplateSelect" ).value == "templateSFA" ) {
+        modeShift = "Saks Fifth Avenue";
+      } else {
+        modeShift = "Saks Off 5th";
+      }
+    }
+    
+    /* **************************************************
+     * EVENT LISTENERS
+     */
+    
+    /* Event Listener for "Link Count"
+     * 
+     * Generates a series of input field sets, based on the number provided in
+     * the "Link Count" input box.
+     * Each set will have two input fields:
+     * "URL:" User will provide the relative URL that the image will click through to.
+     * "Alt:" The Alt tag that accompanies the URL
+     */
+    document.getElementById( "txtinputLinkCount" ).addEventListener( "blur" , function() {
+      document.getElementById( "divLinkRows" ).innerHTML = "";
+      var maxCount = document.getElementById( "txtinputLinkCount" ).value;
+      for( var i = 0; i < maxCount; i++ ) {
+        var linkSetParentDiv = document.createElement( "div" );
+        var linkSetParentDivID = "linkSetDiv" + (i+1);
+        linkSetParentDiv.setAttribute( "id", linkSetParentDivID );
+        var linkSetURLBoxID = "URLBox" + (i+1);
+        var linkSetURLBoxLabel = document.createElement( "label" );
+        linkSetURLBoxLabel.setAttribute( "for", linkSetURLBoxID );
+        linkSetURLBoxLabel.innerHTML = "Link " + (i+1) + ":";
+        var linkSetURLBox = document.createElement( "input" );
+        linkSetURLBox.setAttribute( "id", linkSetURLBoxID );
+        linkSetURLBox.setAttribute( "type", "text" );
+        linkSetURLBox.setAttribute( "style" , "width:40%;" );
+        var linkSetAltBox = document.createElement( "input" );
+        var linkSetAltBoxID = "AltBox" + (i+1);
+        var linkSetAltBoxLabel = document.createElement( "label" );
+        linkSetAltBoxLabel.setAttribute( "for", linkSetAltBoxID );
+        linkSetAltBoxLabel.innerHTML = "Alt Tag:";
+        linkSetAltBox.setAttribute( "id" , linkSetAltBoxID );
+        linkSetAltBox.setAttribute( "type", "text" );
+        
+        linkSetParentDiv.innerHTML = linkSetURLBoxLabel.outerHTML + linkSetURLBox.outerHTML + "&nbsp;&nbsp;&nbsp;&nbsp;" + linkSetAltBoxLabel.outerHTML + linkSetAltBox.outerHTML;
+        document.getElementById( "divLinkRows" ).appendChild( linkSetParentDiv );
+      }
+    });
+
+    /* Event Listener for "Image Count"
+     * 
+     * Generates a series of table row sets, based on the number provided in
+     * the "Image Count" input box 
+     */
+    document.getElementById( "txtinputImgCount" ).addEventListener( "blur", function() {
+      document.getElementById( "divHTMLRows" ).innerHTML = "";
+      var maxCount = document.getElementById( "txtinputImgCount" ).value;
+      for( var i = 0; i < maxCount; i++ ) {
+        var elemRandom = document.createElement( "p" );
+        elemRandom.innerHTML = "Image Slot " + ( i + 1 );
+        document.getElementById( "divHTMLRows" ).appendChild( elemRandom );
+      }
+    });
+    
+    /* Event Listener for "Add HTML Row" button 
+     * 
+     */
+    document.getElementById( "btnAddHTMLRow" ).addEventListener( "click", function() {
+      var elemParagraph = document.createElement( "p" );
+      elemParagraph.innerHTML = "Clicked!";
+      document.getElementById( "divHTMLRows" ).appendChild( elemParagraph );
+    });
+    
+    /* Event Listener for "Add Row Separator" button */
+    document.getElementById( "btnAddRowSep" ).addEventListener( "click", function() {
+      var elemHR = document.createElement( "hr" );
+      document.getElementById( "divHTMLRows" ).appendChild( elemHR );
+    });
+
+    /* Event listener for "Generate Code" button */
+    document.getElementById( "btnGenerateCode" ).addEventListener( "click", function() {
+      document.getElementById( "textareaResult" ).value = modeShift;
+    });
+    
+    /* Event Listener for "Copy Code To Clipboard" button */
+    document.getElementById( "btnCopyCodeToClipboard" ).addEventListener( "click", function() {
+      document.getElementById( "textareaResult" ).select();
+      document.execCommand( 'copy' );
+    });
+    
+  </script>
+</body>
+</html>
